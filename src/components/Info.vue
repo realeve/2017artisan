@@ -67,7 +67,7 @@
         mobile: '',
         detail: '',
         address: ['北京市', '市辖区', '东城区'],
-        showScore:false
+        showScore: false
       }
     },
     computed: {
@@ -76,6 +76,9 @@
       },
       token() {
         return util.getUrlParam('token');
+      },
+      from() {
+        return util.getUrlParam('from');
       }
     },
     methods: {
@@ -105,10 +108,10 @@
         }
 
         if (JSON.stringify(params).includes('""')) {
-            this.showToast({
-              text: '请填写个人信息',
-              type: 'warn'
-            });
+          this.showToast({
+            text: '请填写个人信息',
+            type: 'warn'
+          });
           return;
         }
 
@@ -163,19 +166,19 @@
         ).then((res) => {
           var data = res.data;
           this.showScore = data.status == 2;
-          if(data.status ==0){
+          if (data.status == 0) {
             this.$router.push('/home');
           }
         }).catch((e) => {
           console.log(e);
         });
       },
-      jump(){
+      jump() {
         this.$router.push('/score');
       }
     },
-    created(){      
-      if (this.token == null || this.openid == null) {
+    created() {
+      if (this.token == null || this.openid == null || !util.isWeiXin() || this.from != null) {
         this.$router.push('/follow');
         return;
       }

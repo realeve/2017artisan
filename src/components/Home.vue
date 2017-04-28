@@ -78,6 +78,9 @@
       },
       token() {
         return util.getUrlParam('token');
+      },
+      from() {
+        return util.getUrlParam('from');
       }
     },
     methods: {
@@ -161,16 +164,16 @@
           }
         ).then((res) => {
           var data = res.data;
-          if(data.status >= 1){
+          if (data.status >= 1) {
             this.$router.push('/info');
-          } 
+          }
         }).catch((e) => {
           console.log(e);
         });
       }
     },
     created() {
-      if (this.token == null || this.openid == null) {
+      if (this.token == null || this.openid == null || !util.isWeiXin() || this.from != null) {
         this.$router.push('/follow');
         return;
       }

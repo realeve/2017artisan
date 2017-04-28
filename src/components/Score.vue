@@ -38,6 +38,9 @@
       },
       token() {
         return util.getUrlParam('token');
+      },
+      from(){
+        return util.getUrlParam('from');
       }
     },
     methods: {
@@ -78,7 +81,7 @@
       }
     },
     created() {
-      if (this.token == null || this.openid == null) {
+      if (this.token == null || this.openid == null || this.from !=null) {
         this.$router.push('/follow');
         return;
       }
@@ -104,7 +107,6 @@
       padding-top: 5px;
       color: #636563;
       font-size: 14px;
-      text-indent: 2em;
     }
   }
 
