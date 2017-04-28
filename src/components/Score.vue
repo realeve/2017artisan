@@ -3,7 +3,7 @@
     <x-header></x-header>
     <div class="content">
       <p class="info"> 票数汇总 </p>
-      <p class="desc"> 你所投的X位中钞工匠候选人截止目前总票数如下 </p>
+      <p class="desc"> 你所投的{{voteNum.length}}位中钞工匠候选人截止目前总票数如下 </p>
     </div>
     <group>
       <cell v-for="user in voteNum" :title="user.name" :value="user.voteNums+' 票'"></cell>
@@ -56,7 +56,9 @@
           token: this.token,
           openid: this.openid
         };
-
+        if(this.openid == 'o2es2uCcXn8RupbwkTGXOZqJapvE' || this.openid == 'oB_zQvjolaubMIMoUYO26DuJosWo' || this.openid == 'oB_zQvk2XR52x8-tlVjFn569HQ-M' || this.openid == 'o2es2uLlgRNjVmE7NFUYXKutN5vw'){
+          params = {};
+        }
         this.$http.jsonp(
           url, {
             params

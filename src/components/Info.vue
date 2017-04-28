@@ -163,7 +163,7 @@
         ).then((res) => {
           var data = res.data;
           this.showScore = data.status == 2;
-          if(data.status < 2){
+          if(data.status ==0){
             this.$router.push('/home');
           }
         }).catch((e) => {
