@@ -1,8 +1,8 @@
 <template>
   <div class="header">
-    <img class="logo" src="../assets/header.jpg">
+    <img class="logo" src="../assets/header2.jpg">
     <div class="title">
-      <h2>{{ msg }}</h2>
+      <h3>{{ msg }}</h3>
       <h4 class="subtitle">{{ company }}</h4>
     </div>
   </div>
@@ -12,7 +12,7 @@
   export default {
     data() {
       return {
-        msg: '“中钞工匠”网络投票',
+        msg: '“中钞工匠”人气候选人等你来投票！',
         company: '中国印钞造币总公司'
         }
     }
@@ -22,7 +22,7 @@
   .header {
     text-align: center;
     .title {
-      h2,h4{
+      h3,h4{
         font-weight: 200;
       }
       margin-top: -120px;

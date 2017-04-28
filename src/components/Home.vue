@@ -3,16 +3,15 @@
     <x-header></x-header>
     <toast v-model="toast.show" :type="toast.type">{{ toast.text }}</toast>
     <div class="vote" v-for="(user,i) in userList">
-      <sticky>
+      <sticky :check-sticky-support="false">
         <divider>{{user.id}}.{{user.name}}</divider>
       </sticky>
 
       <card>
-        <img slot="header" src="../assets/user.jpg" style="width:100%;display:block;">
+        <img slot="header" :src="`./static/img/${user.id}.jpg`" style="width:100%;display:block;">
         <div slot="content" class="card-content">
           <p class="title">{{user.dpt}}</p>
           <p class="subtitle">{{user.attr}}</p>
-          <p class="subtitle">当前票数: {{voteNum[i]}}</p>
           <p class="desc">{{user.desc}}
           </p>
           <x-switch style="margin-top:10px;" :inline-desc="maxnum+'/5'" :title="'投他一票'" v-model="valueList[i]" @on-change="checkMaxVotes(i)"></x-switch>
@@ -132,17 +131,16 @@
           var data = res.data;
           if (data.status > '0') {
             this.showToast({
-              text: '提交数据成功',
+              text: data.title,
               type: 'success'
             });
-
             // 跳转提交用户信息
             setTimeout(() => {
               this.$router.push('/info');
             }, 500);
           } else {
             this.showToast({
-              text: '服务器写入数据失败',
+              text: data.title,
               type: 'warn'
             });
           }
@@ -151,27 +149,33 @@
           console.log(e);
         });
       },
-      getVoteNums() {
-        let url = '//cbpc540.applinzi.com/index.php?s=/addon/GoodVoice/GoodVoice/getArtisanVotes';
+      getStep() {
+        let url = '//cbpc540.applinzi.com/index.php?s=/addon/GoodVoice/GoodVoice/isSetUserInfo';
+        let params = {
+          openid: this.openid,
+          token: this.token
+        }
         this.$http.jsonp(
-          url
-        ).then((res) => {
-          if (!res.ok) {
-            this.showToast({
-              text: '票数获取失败',
-              type: 'warn'
-            });
-            return;
+          url, {
+            params
           }
-          this.voteNum = res.data.map(item => item.voteNums);
+        ).then((res) => {
+          var data = res.data;
+          if(data.status >= 1){
+            this.$router.push('/info');
+          } 
         }).catch((e) => {
           console.log(e);
         });
       }
     },
     created() {
+      if (this.token == null || this.openid == null) {
+        this.$router.push('/follow');
+        return;
+      }
+      this.getStep();
       this.valueList = userList.map(item => false);
-      this.getVoteNums();
     }
   }
 

@@ -4,7 +4,7 @@
 
     <div class="content">
       <p class="info">个人信息</p>
-      <p class="desc">本页面并非必填信息，仅用于活动结束抽奖时邮寄奖品，同时我们承诺不会将该信息用于其它用途。</p>
+      <p class="desc">本页面并非必填信息，仅用于活动结束抽奖时邮寄奖品，同时我们承诺不会将该信息用于其它用途，如不完整填写详细联系方式视为自动放弃抽奖资格。</p>
     </div>
 
     <group label-width="4.5em" label-margin-right="2em" label-align="right">
@@ -18,6 +18,7 @@
 
     <div class="submit">
       <x-button @click.native="submit" type="primary">提交数据</x-button>
+      <x-button @click.native="jump" type="default">查看票数</x-button>
     </div>
 
   </div>
@@ -65,7 +66,8 @@
         user: '',
         mobile: '',
         detail: '',
-        address: ['北京市', '市辖区', '东城区']
+        address: ['北京市', '市辖区', '东城区'],
+        showScore:false
       }
     },
     computed: {
@@ -103,7 +105,11 @@
         }
 
         if (JSON.stringify(params).includes('""')) {
-          console.log('数据不完整');
+            this.showToast({
+              text: '请填写个人信息',
+              type: 'warn'
+            });
+          return;
         }
 
         let url = '//cbpc540.applinzi.com/index.php?s=/addon/GoodVoice/GoodVoice/setUserInfo';
@@ -126,9 +132,13 @@
               type: 'success'
             });
             this.user = '';
-            this.mibile = '';
+            this.mobile = '';
             this.detail = '';
             this.address = ['北京市', '市辖区', '东城区'];
+            // 跳转提交用户信息
+            setTimeout(() => {
+              this.$router.push('/score');
+            }, 500);
           } else {
             this.showToast({
               text: '请勿重复提交',
@@ -139,7 +149,37 @@
         }).catch((e) => {
           console.log(e);
         });
+      },
+      getStep() {
+        let url = '//cbpc540.applinzi.com/index.php?s=/addon/GoodVoice/GoodVoice/isSetUserInfo';
+        let params = {
+          openid: this.openid,
+          token: this.token
+        }
+        this.$http.jsonp(
+          url, {
+            params
+          }
+        ).then((res) => {
+          var data = res.data;
+          this.showScore = data.status == 2;
+          if(data.status < 2){
+            this.$router.push('/home');
+          }
+        }).catch((e) => {
+          console.log(e);
+        });
+      },
+      jump(){
+        this.$router.push('/score');
       }
+    },
+    created(){      
+      if (this.token == null || this.openid == null) {
+        this.$router.push('/follow');
+        return;
+      }
+      this.getStep();
     }
   }
 
