@@ -1,13 +1,6 @@
 <template>
   <div>
-    <div class="header">
-      <img class="logo" src="../assets/artisan.jpg">
-
-      <div class="title">
-        <h1>{{ msg }}</h1>
-        <h4 class="subtitle">{{ company }}</h4>
-      </div>
-    </div>
+    <x-header></x-header>
 
     <div class="content">
       <p class="info">个人信息</p>
@@ -18,7 +11,8 @@
       <x-input title="姓名" v-model="user" placeholder="请填写收件人姓名" :required="true" :show-clear="true"></x-input>
       <x-input title="手机号" is-type="china-mobile" v-model="mobile" :show-clear="true" :required="true" placeholder="请输入手机号"></x-input>
       <x-address title="地址选择" v-model="address" raw-value :list="addressData" :required="true" value-text-align="left"></x-address>
-      <x-textarea title="详细地址" placeholder="请填写详细地址" v-model="detail" :required="true" :show-counter="false" :show-clear="true" :rows="3"></x-textarea>
+      <x-textarea title="详细地址" placeholder="请填写详细地址" v-model="detail" :required="true" :show-counter="false" :show-clear="true"
+        :rows="3"></x-textarea>
     </group>
     <toast v-model="toast.show" :type="toast.type">{{toast.text}}</toast>
 
@@ -33,15 +27,19 @@
   import {
     Toast,
     XTextarea,
-    XAddress, 
+    XAddress,
     ChinaAddressV3Data,
     XButton,
     Group,
     Cell,
     XInput,
     PopupPicker,
-    Picker
+    Picker,
+    Value2nameFilter as value2name
   } from 'vux'
+
+  import XHeader from './Header'
+  import util from '../js/common'
 
   export default {
     components: {
@@ -53,12 +51,11 @@
       XTextarea,
       XInput,
       PopupPicker,
-      Picker
+      Picker,
+      XHeader
     },
     data() {
       return {
-        msg: '“中钞工匠”网络投票',
-        company: '中国印钞造币总公司',
         addressData: ChinaAddressV3Data,
         toast: {
           show: false,
@@ -71,7 +68,18 @@
         address: ['北京市', '市辖区', '东城区']
       }
     },
+    computed: {
+      openid() {
+        return util.getUrlParam('openid');
+      },
+      token() {
+        return util.getUrlParam('token');
+      }
+    },
     methods: {
+      getName(value) {
+        return value2name(value, ChinaAddressV3Data)
+      },
       showToast(settings) {
         this.toast.text = settings.text;
         this.toast.type = settings.type;
@@ -81,13 +89,56 @@
         }, 1500);
       },
       submit() {
-        this.showToast({
-          text: '投票成功',
-          type: 'success'
+        let address = this.getName(this.address).split(' ');
+        let params = {
+          user: this.user,
+          mobile: this.mobile,
+          prov: address[0],
+          city: address[1],
+          area: address[2],
+          detail: this.detail,
+          openid: this.openid,
+          token: this.token,
+          rec_time: util.getNow()
+        }
+
+        if (JSON.stringify(params).includes('""')) {
+          console.log('数据不完整');
+        }
+
+        let url = '//cbpc540.applinzi.com/index.php?s=/addon/GoodVoice/GoodVoice/setUserInfo';
+        this.$http.jsonp(
+          url, {
+            params
+          }
+        ).then((res) => {
+          if (!res.ok) {
+            this.showToast({
+              text: '数据提交失败',
+              type: 'warn'
+            });
+            return;
+          }
+          var data = res.data;
+          if (data.status > '0') {
+            this.showToast({
+              text: '提交数据成功',
+              type: 'success'
+            });
+            this.user = '';
+            this.mibile = '';
+            this.detail = '';
+            this.address = ['北京市', '市辖区', '东城区'];
+          } else {
+            this.showToast({
+              text: '请勿重复提交',
+              type: 'warn'
+            });
+          }
+
+        }).catch((e) => {
+          console.log(e);
         });
-        console.log(this.user);
-        console.log(this.mobile);
-        console.log(this.detail);
       }
     }
   }
@@ -95,26 +146,9 @@
 </script>
 
 <style scoped lang="less">
-  .header {
-    text-align: center;
-    .title {
-      font-weight: 100;
-      margin-top: -120px;
-      color: #fff;
-      margin-bottom: 30px;
-      .subtitle {
-        padding-top: 10px;
-      }
-    }
-    .logo {
-      width: 100%;
-      height: 100%;
-    }
-  }
-
   .content {
     padding: 15px;
-    padding-top:10px;
+    padding-top: 10px;
     .info {
       display: flex;
       justify-content: center;

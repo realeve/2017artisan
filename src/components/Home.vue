@@ -1,24 +1,18 @@
 <template>
   <div>
-    <div class="header">
-      <img class="logo" src="../assets/artisan.jpg">
-      <div class="title">
-        <h1>{{ msg }}</h1>
-        <h4 class="subtitle">{{ company }}</h4>
-      </div>
-    </div>
-
+    <x-header></x-header>
     <toast v-model="toast.show" :type="toast.type">{{ toast.text }}</toast>
     <div class="vote" v-for="(user,i) in userList">
       <sticky>
         <divider>{{user.id}}.{{user.name}}</divider>
       </sticky>
-      
+
       <card>
-        <img slot="header" src="../assets/artisan.jpg" style="width:100%;display:block;">
+        <img slot="header" src="../assets/user.jpg" style="width:100%;display:block;">
         <div slot="content" class="card-content">
           <p class="title">{{user.dpt}}</p>
           <p class="subtitle">{{user.attr}}</p>
+          <p class="subtitle">当前票数: {{voteNum[i]}}</p>
           <p class="desc">{{user.desc}}
           </p>
           <x-switch style="margin-top:10px;" :inline-desc="maxnum+'/5'" :title="'投他一票'" v-model="valueList[i]" @on-change="checkMaxVotes(i)"></x-switch>
@@ -45,7 +39,9 @@
     XButton
   } from 'vux'
 
-  import userList from '../js/artisanList.js'
+  import XHeader from './Header';
+  import userList from '../js/artisanList'
+  import util from '../js/common'
 
   export default {
     components: {
@@ -57,18 +53,17 @@
       XSwitch,
       Toast,
       XButton,
+      XHeader,
     },
     data() {
       return {
-        msg: '“中钞工匠”网络投票',
-        company: '中国印钞造币总公司',
         valueList: [],
-        selected: [],
         toast: {
           show: false,
           text: '',
           type: ''
-        }
+        },
+        voteNum: []
       }
     },
     computed: {
@@ -78,6 +73,12 @@
       maxnum() {
         let count = this.valueList.filter(item => item);
         return count.length;
+      },
+      openid() {
+        return util.getUrlParam('openid');
+      },
+      token() {
+        return util.getUrlParam('token');
       }
     },
     methods: {
@@ -98,47 +99,95 @@
         }
       },
       submit() {
-        this.showToast({
-          text: '投票成功',
-          type: 'success'
+        let artisanList = [];
+        let now = util.getNow();
+        let addStr = [];
+        this.valueList.forEach((item, i) => {
+          if (item) {
+            artisanList.push(`('${this.token}','${this.openid}',${i},'${now}')`);
+            addStr.push(i);
+          }
+        });
+
+        let params = {
+          openid: this.openid,
+          token: this.token,
+          valstr: artisanList.join(','),
+          addstr: addStr.join(',')
+        }
+
+        let url = '//cbpc540.applinzi.com/index.php?s=/addon/GoodVoice/GoodVoice/addArtisanInfo';
+        this.$http.jsonp(
+          url, {
+            params
+          }
+        ).then((res) => {
+          if (!res.ok) {
+            this.showToast({
+              text: '数据提交失败',
+              type: 'warn'
+            });
+            return;
+          }
+          var data = res.data;
+          if (data.status > '0') {
+            this.showToast({
+              text: '提交数据成功',
+              type: 'success'
+            });
+
+            // 跳转提交用户信息
+            setTimeout(() => {
+              this.$router.push('/info');
+            }, 500);
+          } else {
+            this.showToast({
+              text: '服务器写入数据失败',
+              type: 'warn'
+            });
+          }
+
+        }).catch((e) => {
+          console.log(e);
+        });
+      },
+      getVoteNums() {
+        let url = '//cbpc540.applinzi.com/index.php?s=/addon/GoodVoice/GoodVoice/getArtisanVotes';
+        this.$http.jsonp(
+          url
+        ).then((res) => {
+          if (!res.ok) {
+            this.showToast({
+              text: '票数获取失败',
+              type: 'warn'
+            });
+            return;
+          }
+          this.voteNum = res.data.map(item => item.voteNums);
+        }).catch((e) => {
+          console.log(e);
         });
       }
     },
     created() {
       this.valueList = userList.map(item => false);
+      this.getVoteNums();
     }
   }
 
 </script>
 
 <style scoped lang="less">
-  .header {
-    text-align: center;
-    .title {
-      font-weight: 100;
-      margin-top: -120px;
-      color: #fff;
-      margin-bottom: 30px;
-      .subtitle {
-        padding-top: 10px;
-      }
-    }
-    .logo {
-      width: 100%;
-      height: 100%;
-    }
-  }
-
   .card-content {
     margin: 15px 15px 20px 15px;
     .title {
       color: #444;
-      font-size: 15px;
+      font-size: 16px;
       font-weight: 500;
     }
     .subtitle {
       color: #666;
-      font-size: 12px;
+      font-size: 13px;
     }
     .desc {
       padding-top: 15px;
@@ -154,11 +203,11 @@
     .vux-divider {
       font-size: 24px;
       color: #333;
-      line-height:0;
-      background:rgba(248,248,248,0.9);
-      height:30px;
-      display:flex;
-      align-items:center;
+      line-height: 0;
+      background: rgba(248, 248, 248, 0.9);
+      height: 30px;
+      display: flex;
+      align-items: center;
     }
   }
 
