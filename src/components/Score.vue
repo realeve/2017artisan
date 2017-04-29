@@ -4,6 +4,7 @@
     <div class="content">
       <p class="info"> 票数汇总 </p>
       <p class="desc"> 你所投的{{voteNum.length}}位中钞工匠候选人截止目前总票数如下 </p>
+      <p class="desc" v-if="isAdmin">信息填写:{{countInfo.address}}/{{countInfo.alls}}</p>
     </div>
     <group>
       <cell v-for="user in voteNum" :title="user.name" :value="user.voteNums+' 票'"></cell>
@@ -29,7 +30,8 @@
     },
     data() {
       return {
-        voteNum: []
+        voteNum: [],
+        countInfo:''
       }
     },
     computed: {
@@ -39,8 +41,12 @@
       token() {
         return util.getUrlParam('token');
       },
-      from(){
+      from() {
         return util.getUrlParam('from');
+      },
+      isAdmin() {
+        return (this.openid == 'o2es2uCcXn8RupbwkTGXOZqJapvE' || this.openid == 'oB_zQvjolaubMIMoUYO26DuJosWo' || this.openid ==
+          'oB_zQvk2XR52x8-tlVjFn569HQ-M' || this.openid == 'o2es2uLlgRNjVmE7NFUYXKutN5vw');
       }
     },
     methods: {
@@ -59,7 +65,7 @@
           token: this.token,
           openid: this.openid
         };
-        if(this.openid == 'o2es2uCcXn8RupbwkTGXOZqJapvE' || this.openid == 'oB_zQvjolaubMIMoUYO26DuJosWo' || this.openid == 'oB_zQvk2XR52x8-tlVjFn569HQ-M' || this.openid == 'o2es2uLlgRNjVmE7NFUYXKutN5vw'){
+        if (this.isAdmin) {
           params = {};
         }
         this.$http.jsonp(
@@ -78,10 +84,21 @@
         }).catch((e) => {
           console.log(e);
         });
+      },
+      getCountInfo() {
+        let url = '//cbpc540.applinzi.com/index.php?s=/addon/GoodVoice/GoodVoice/countVoteInfo';
+
+        this.$http.jsonp(
+          url
+        ).then((res) => {     
+          this.countInfo = res.data;
+        }).catch((e) => {
+          console.log(e);
+        });
       }
     },
     created() {
-      if (this.token == null || this.openid == null || this.from !=null) {
+      if (this.token == null || this.openid == null || this.from != null) {
         this.$router.push('/follow');
         return;
       }
