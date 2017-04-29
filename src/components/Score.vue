@@ -5,9 +5,17 @@
       <p class="info"> 票数汇总 </p>
       <p class="desc"> 你所投的{{voteNum.length}}位中钞工匠候选人截止目前总票数如下 </p>
       <p class="desc" v-if="isAdmin">信息填写:{{countInfo.address}}/{{countInfo.alls}}</p>
+      <p class="desc" v-if="isAdmin">投票情况:{{prizeInfo.four}}人答对4题，{{prizeInfo.five}}人答对5题</p>
     </div>
     <group>
       <cell v-for="user in voteNum" :title="user.name" :value="user.voteNums+' 票'"></cell>
+    </group>
+    
+    <div class="content">
+      <p class="info"> 各地区票数汇总 </p>
+    </div>
+    <group>
+      <cell v-for="item in provInfo" :title="item.prov" :value="item.num+' 票'"></cell>
     </group>
   </div>
 </template>
@@ -31,7 +39,15 @@
     data() {
       return {
         voteNum: [],
-        countInfo:''
+        countInfo:{
+          alls:'',
+          address:''
+        },
+        prizeInfo:{
+          four:'',
+          five:''
+        },
+        provInfo:''
       }
     },
     computed: {
@@ -91,7 +107,29 @@
         this.$http.jsonp(
           url
         ).then((res) => {     
-          this.countInfo = res.data;
+          this.countInfo = res.data[0];
+        }).catch((e) => {
+          console.log(e);
+        });
+      },
+      getPrizeInfo() {
+        let url = '//cbpc540.applinzi.com/index.php?s=/addon/GoodVoice/GoodVoice/countPrizeInfo';
+
+        this.$http.jsonp(
+          url
+        ).then((res) => {     
+          this.prizeInfo = res.data[0];
+        }).catch((e) => {
+          console.log(e);
+        });
+      },
+      getVoteByProv() {
+        let url = '//cbpc540.applinzi.com/index.php?s=/addon/GoodVoice/GoodVoice/countVoteByProv';
+
+        this.$http.jsonp(
+          url
+        ).then((res) => {     
+          this.provInfo = res.data;
         }).catch((e) => {
           console.log(e);
         });
@@ -103,6 +141,11 @@
         return;
       }
       this.getVoteNums();
+      if(this.isAdmin){
+        this.getCountInfo();
+        this.getPrizeInfo();
+        this.getVoteByProv();
+      }
     }
   }
 
