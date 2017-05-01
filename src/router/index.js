@@ -4,6 +4,7 @@ import Home from '@/components/Home'
 import Info from '@/components/Info'
 import Follow from '@/components/Follow'
 import Score from '@/components/Score'
+import Message from '@/components/Message'
 
 Vue.use(Router)
 
@@ -23,5 +24,8 @@ export default new Router({
     }, {
         path: '/score',
         component: Score
+    }, {
+        path: '/message',
+        component: Message
     }]
 })

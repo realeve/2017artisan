@@ -20,7 +20,7 @@
     </div>
 
     <div class="submit">
-      <x-button :disabled="maxnum>5 || maxnum==0" @click.native="submit" type="primary">提交数据</x-button>
+      <x-button :disabled="maxnum!=5" @click.native="submit" type="primary">提交数据</x-button>
     </div>
   </div>
 
@@ -36,11 +36,11 @@
     XSwitch,
     Toast,
     XButton
-  } from 'vux'
+  } from 'vux';
 
   import XHeader from './Header';
   import userList from '../js/artisanList'
-  import util from '../js/common'
+  import util from '../js/common';
 
   export default {
     components: {
@@ -79,8 +79,17 @@
       token() {
         return util.getUrlParam('token');
       },
+      signature() {
+        return util.getUrlParam('signature');
+      },
+      time() {
+        return util.getUrlParam('timestamp');
+      },
       from() {
         return util.getUrlParam('from');
+      },
+      curTimeStamp() {
+        return (new Date().getTime() / 1000).toFixed(0);
       }
     },
     methods: {
@@ -115,7 +124,9 @@
           openid: this.openid,
           token: this.token,
           valstr: artisanList.join(','),
-          addstr: addStr.join(',')
+          addstr: addStr.join(','),
+          timestamp: this.time,
+          signature: this.signature
         }
 
         let url = '//cbpc540.applinzi.com/index.php?s=/addon/GoodVoice/GoodVoice/addArtisanInfo';
@@ -173,7 +184,18 @@
       }
     },
     created() {
-      if (this.token == null || this.openid == null || !util.isWeiXin() || this.from != null) {
+
+      // 有效期过期，重新发送
+      console.log(this.curTimeStamp, this.time);
+
+      console.log(this.signature);
+      if (this.curTimeStamp - this.time > 600 || this.curTimeStamp == null || this.signature == null) {
+        this.userList = [];
+        this.$router.push('/message');
+        return;
+      }
+      //
+      if (this.token == null || this.openid == null || !util.isWeiXin()  || this.from != null) {
         this.$router.push('/follow');
         return;
       }
